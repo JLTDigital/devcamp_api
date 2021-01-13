@@ -6,7 +6,11 @@ const fileUpload = require('express-fileupload');
 const cookieParser = require('cookie-parser');
 const errorHandler = require('./middleware/error');
 const mongoSantitize = require('express-mongo-sanitize');
+const cors = require('cors');
 const helmet = require('helmet');
+const xss = require('xss-clean');
+const rateLimit = require('express-rate-limit');
+const hpp = require('hpp');
 const connectDB = require('./config/db');
 const path = require('path');
 
@@ -44,6 +48,23 @@ app.use(mongoSantitize());
 
 // Set security headers
 app.use(helmet());
+
+// Prevent XSS Attacks
+app.use(xss());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 10 * 60 * 1000, // 10 Mins
+  max: 100
+});
+
+app.use(limiter);
+
+// Prevent HTTP Param pollution
+app.use(hpp());
+
+// Enable CORS
+app.use(cors());
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
